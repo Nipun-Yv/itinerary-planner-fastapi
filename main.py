@@ -7,6 +7,7 @@ from langchain_core.output_parsers import JsonOutputParser
 from pydantic import BaseModel
 import json
 import os
+import httpx
 from typing import AsyncGenerator
 
 from models.ItineraryModels import Itinerary, ItineraryItem
