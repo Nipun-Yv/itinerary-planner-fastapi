@@ -41,3 +41,4 @@ class ItineraryItem(BaseModel):
 
 class Itinerary(BaseModel):
     items: List[ItineraryItem]
+

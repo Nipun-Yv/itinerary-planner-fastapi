@@ -1,15 +1,16 @@
-from fastapi import FastAPI
+from fastapi import FastAPI,HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_core.output_parsers import JsonOutputParser
+from pydantic import BaseModel
 import json
 import os
-import httpx
 from typing import AsyncGenerator
 
 from models.ItineraryModels import Itinerary, ItineraryItem
+from models.ActivityModels import CategoryList
 from utils.activity_formatter import format_activity
 
 from dotenv import load_dotenv
@@ -106,6 +107,32 @@ def getSampleResponse():
     res = structured_output_model.invoke(messages)
     return {"itinerary": res}
 
+class DescriptionBody(BaseModel):
+    description:str
+@app.post("/get-recommendations")
+async def getItinerary(descriptionBody:DescriptionBody):
+    try:
+        model=ChatOpenAI(model="gpt-4.1",temperature=0.1)
+        messages=[] 
+        system_message = SystemMessage(content="""
+        You are a helpful assistant that receives user descriptions about their desired trip experience.
+        Your task is to analyze these descriptions and infer the types of activity categories the user is most likely interested in.
+        You are allowed to infer loosely, and try to associate as many categories as you can.
+        """)
+        human_message=HumanMessage(content=descriptionBody.description)
+
+        structured_model=model.with_structured_output(schema=CategoryList)
+
+        messages.extend([system_message,human_message])
+        result=structured_model.invoke(messages)
+        print(result)
+        return {
+            "category_list":result.category_list
+        }
+    except Exception as e:
+        print(str(e))
+        raise HTTPException(status_code=500, detail="Internal server error")
+
 
 # Alternative approach using Server-Sent Events (SSE)
 @app.get("/stream-itinerary-sse/{userId}")
@@ -127,14 +154,12 @@ async def stream_itinerary_sse(userId :str):
             # Send initial connection message
             yield "data: " + json.dumps({"type": "connected", "message": "Stream started"}) + "\n\n"
             
-            # Initialize the model
             model = ChatOpenAI(
                 model="gpt-4.1",
                 streaming=True,
                 temperature=0.1
             )
-            
-            # Use a more structured approach
+
             system_prompt = SystemMessage(content="""
             You are a travel planning assistant. Create an itinerary from a selected list of activities and present each activity as a separate JSON object.
                                           
