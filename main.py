@@ -1,4 +1,4 @@
-from fastapi import FastAPI,HTTPException
+from fastapi import FastAPI,HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from langchain_openai import ChatOpenAI
@@ -137,7 +137,7 @@ async def getItinerary(descriptionBody:DescriptionBody):
 
 # Alternative approach using Server-Sent Events (SSE)
 @app.get("/stream-itinerary-sse/{userId}")
-async def stream_itinerary_sse(userId :str):
+async def stream_itinerary_sse(userId :str,date: str = Query(...)):
     async def generate_sse_stream(userId) -> AsyncGenerator[str, None]:
         try:
             activity_list=[]
@@ -161,7 +161,7 @@ async def stream_itinerary_sse(userId :str):
                 temperature=0.1
             )
 
-            system_prompt = SystemMessage(content="""
+            system_prompt = SystemMessage(content=f"""
             You are a travel planning assistant. Create an itinerary from a selected list of activities and present each activity as a separate JSON object.
                                           
             Each activity includes:
@@ -192,7 +192,7 @@ async def stream_itinerary_sse(userId :str):
             Times must be in ISO 8601 format: "2025-06-27T08:00:00"
             For activities of type 'rest' or 'commute' as well as activities not linked to the activity list, set a randomly generate activity id, otherwise use the given activity_id
             
-            Start the itinerary at 8:00 AM on June 24th, 2025, you may span it across several days
+            Start the itinerary at 8:00 AM on {date}(YYYY-MM-DD), you may span it across several days
             """)
 
             formatted_activity_message=format_activity(activity_list)
