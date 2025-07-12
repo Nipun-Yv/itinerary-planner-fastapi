@@ -137,8 +137,7 @@ async def getItinerary(descriptionBody:DescriptionBody):
 
 # Alternative approach using Server-Sent Events (SSE)
 @app.get("/stream-itinerary-sse/{userId}")
-async def stream_itinerary_sse(userId :str,date: str = Query(...)):
-    print(date)
+async def stream_itinerary_sse(userId :str):
     async def generate_sse_stream(userId) -> AsyncGenerator[str, None]:
         try:
             activity_list=[]
