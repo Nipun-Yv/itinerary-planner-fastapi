@@ -193,7 +193,7 @@ async def stream_itinerary_sse(userId :str,date: str = Query(...)):
             Times must be in ISO 8601 format: "2025-06-27T08:00:00"
             For activities of type 'rest' or 'commute' as well as activities not linked to the activity list, set a randomly generate activity id, otherwise use the given activity_id
             
-            Start the itinerary at 8:00 AM on {date}, you may span it across several days
+            Start the itinerary at 8:00 AM on 15th July,2025 , you may span it across several days
             """)
 
             formatted_activity_message=format_activity(activity_list)
